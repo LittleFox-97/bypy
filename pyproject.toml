@@ -1,2 +1,18 @@
 [tool.ruff]
-line-length = 160
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D300"]
+preview = true
+
+[tool.ruff.flake8-quotes]
+docstring-quotes = "single"
+inline-quotes = "single"
+multiline-quotes = "single"
+
+[tool.mypy]
+python_version = "3.13"
+platform = "win32"
+strict = true
