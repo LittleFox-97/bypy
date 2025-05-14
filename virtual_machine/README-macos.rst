@@ -7,36 +7,30 @@ On the Linux machine::
     echo 1 | sudo tee /sys/module/kvm/parameters/ignore_msrs
 
 
-Edit OpenCore-Boot.sh, replacing Penryn with Haswell-noTSX and add the
-following lines to args at the bottom::
+Edit OpenCore-Boot.sh, replacing Penryn with Haswell-noTSX and change the
+``-device vmware-svga`` line to:
 
-  -display none
-  -vnc 0.0.0.0:1 -k en-us
+  -display gtk,zoom-to-fit=on
 
 Run the machine with::
 
     ./OpenCore-Boot.sh
 
-Connect to its GUI with a vnc client such as remmima at localhost:5091.
-At the prompt type exit and enter. Then go to Boot maintenance manager->Boot
-from File then choose the first entry which should be named EFI something.
-Then choose EFI/BOOT/bootx64.efi as the file to boot. Boot the macos Base
-system image.
+Use arrow keys and enter to boot the macOS base system image. Once booted,
+install the OS:
 
-Install the OS:
-
-* First, run Disk Utility and create a single APFS partition to install to.
-  Then quit disk utility and choose: Reinstall macos Sonoma
+* First, run Disk Utility and create a single APFS partition named ``SystemDisk`` to install to.
+  Then quit disk utility and choose: Reinstall macos Sonoma.
 
 * Create a user account named: ``kovid`` during OS installation
 
 Run::
 
-    mkdir macos-sonoma
-    mv mac_hdd_ng.img macos-sonoma/SystemDisk.qcow2
-    cp OVMF*.fd macos-sonoma/
-    cp OpenCore/OpenCore.qcow2 macos-sonoma/
-    cd macos-sonoma
+    mkdir macos && \
+    mv mac_hdd_ng.img macos/SystemDisk.qcow2 && \
+    cp OVMF*.fd macos/ && \
+    cp OpenCore/OpenCore.qcow2 macos/ && \
+    cd macos
 
 Create the following :file:`machine-spec` file based on OpenCore-Boot.sh::
 
@@ -69,17 +63,6 @@ Create the following :file:`machine-spec` file based on OpenCore-Boot.sh::
 Run the new VM with::
 
     bypy vm run --with-gui `pwd`
-
-Choose to boot from the SystemDisk at the OpenCore boot menu.
-
-In Terminal.app mount the EFI partition (you can use diskutil list to get the partition device usually /dev/disk0)::
-
-    sudo mkdir /Volumes/EFI
-    sudo mount -t msdos /dev/disk0s1 /Volumes/EFI
-    vim /Volumes/EFI/EFI/OC/config.plist
-
-Set ShowPicker to false and Timeout to 5. Go to System Preferences->Startup
-Disk and set the startup disk to the system disk. Click the Restart button.
 
 
 After the OS is installed:
@@ -114,17 +97,21 @@ After the OS is installed:
 
   sudo trimforce enable
 
-* Change the hostname to sonoma::
+* Change the hostname::
 
   sudo scutil --set HostName sonoma
+
+* Update to macOS Sequoia using the in OS update facility (System
+  settings->General->Software update). This takes about an hour, but works, it
+  might hang on final reboot, in which case quit and restart the VM.
 
 * Install Xcode from https://developer.apple.com/download/all/
 Download the version of Xcode (12.4 for kitty and 15.4 for calibre) you need as a .xip archive. Run::
 
-    curl -fSsL -O https://github.com/saagarjha/unxip/releases/download/v3.1/unxip && chmod +x unxip
-    ./unxip Xco*.xip && mv Xco*.app /Applications
-    sudo xcodebuild -license
-    rm Xco*.xip
+    curl -fSsL -O https://github.com/saagarjha/unxip/releases/download/v3.1/unxip && chmod +x unxip && \
+    ./unxip -v Xco*.xip && mv Xco*.app /Applications && \
+    sudo xcodebuild -license && \
+    rm Xco*.xip && \
     python3 -m pip install certifi html5lib
 
 * Install an up-to-date rsync::
